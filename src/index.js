@@ -33,6 +33,12 @@ app.post('/users', (request, response) => {
     todos: []
   }
 
+  const userAlreadyExists = users.find(user => user.username === username);
+
+  if (userAlreadyExists) {
+    return response.status(400).json({ error: 'Username already taken'})
+  }
+
   users.push(newUser)
 
   return response.status(201).json(users);
@@ -70,17 +76,38 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
 
   todo.title = title;
   todo.deadline = new Date(deadline);
-  
 
   return response.status(201).json(todo);
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { user } = request;
+  const { id } = request.params;
+
+  const todo = user.todos.find((todo) => todo.id === id);
+
+  if (!todo) {
+    return response.status(400).json({ error: 'Todo does not exists'})
+  }
+
+  todo.done = true;
+
+  return response.status(201).json(todo);
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { user } = request;
+  const { id } = request.params;
+
+  const todoIndex = user.todos.findIndex(todo => todo.id === id);
+
+  if (todoIndex <= -1) {
+    return response.status(400).json({ error: 'Todo does not exists'})
+  }
+
+  user.todos.splice(todoIndex, 1)
+  
+  return response.status(201).json(user);
 });
 
 module.exports = app;
